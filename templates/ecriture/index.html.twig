@@ -1,0 +1,338 @@
+{% extends 'base.html.twig' %}
+
+
+{% block body %}
+    <style>
+        body{font-family: 'Roboto','sans-serif'}
+
+        #hot-display-license-info {
+            display: none;
+        }
+
+        
+    </style>
+    <div class="row">
+        <div class="col-lg-8 col-sm-10">
+            <div id="hot"></div>
+        </div>
+        <div class="col-lg-4 col-sm-2">
+            <div class="easyzoom easyzoom--overlay" style="height : 100%;">
+                <a href="images/defaut_image.gif" class="preview" >
+                    <img style="height : 450px;" width="300" height="600" src="{{asset('images/ecriture/defaut_image.gif')}}" alt="preview" class="preview">
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+    </div>
+{% endblock %}
+{% block javascripts %}
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+            integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <!--    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+       -->
+    <script src="https://docs.handsontable.com/pro/bower_components/handsontable-pro/dist/handsontable.full.min.js"></script>
+    <script src="{{asset('assets/js/zoom.js')}}"></script>
+
+    <script>
+        var save_cell_url = "{{ path('save_cell') }}", new_row_url = "{{ path('new_row') }}",
+            remove_row_url = "{{ path('remove_row') }}",
+            save_image_url = "{{path('ecriture_image')}}";
+        var dataObject = JSON.parse('{{ ecritures|raw }}');
+        var numerosCompte = JSON.parse('{{ numerosCompte|raw }}');
+        var journaux = JSON.parse('{{ journaux|raw }}');
+        var exercices = JSON.parse('{{ exercices|raw }}');
+        var hotElement = document.querySelector('#hot');
+        var hotElementContainer = hotElement.parentNode;
+        var headers = [
+            'ID',
+            'EcritureID',
+            'Journal',
+            'Exercice',
+            'libelle',
+            'date',
+            'numero de Compte',
+            'Débit',
+            'Crédit',
+            'image'
+        ];
+        var hotSettings = {
+            data: dataObject,
+            columns: [
+                {
+                    data: 'id',
+                    type: 'numeric',
+                    readOnly: true,
+
+                },
+                {
+                    data: 'tokenEcriture',
+                    readOnly: true,
+
+                },
+                {
+                    data: 'idJournal',
+                    type: 'autocomplete',
+                    strict: true,
+                    source: journaux.map(function (e) {
+                        return e.libelle
+                    })
+                },
+                {
+                    data: 'idExercice',
+                    strict: true,
+                    type: 'dropdown',
+                    source: exercices.map(function (e) {
+                        return e.libelle
+                    })
+                },
+                {
+                    data: 'libelle',
+                    type: 'text',
+
+                },
+                {
+                    data: 'date',
+                    type: 'date',
+                    dateFormat: 'DD-MM-YYYY'
+                },
+                {
+                    data: 'numeroCompte',
+                    type: 'autocomplete',
+                    source: numerosCompte.map(function (e) {
+                        return e.numeroCompte
+                    })
+
+                },
+                {
+                    data: 'debit',
+                    type: 'numeric',
+                    numericFormat: {
+                        pattern: '0.00'
+                    }
+                },
+                {
+                    data: 'credit',
+                    type: 'numeric',
+                    numericFormat: {
+                        pattern: '0.00'
+                    }
+                },
+                {
+                    data: 'img',
+                    renderer: inputFileRenderer
+                }
+            ],
+            hiddenColumns: {
+                columns: [/*headers.length - 1,*/0,1]
+            },
+            stretchH: 'none',
+            formulas: true,
+            autoWrapRow: true,
+            rowHeaders: false,
+            allowInsertRow: true,
+            contextMenu: true,
+            minSpareRows: true,
+            filters: true,
+            dropdownMenu: false,
+            colHeaders: headers,
+            width: 720,
+  			height: 620,
+  			colWidths: 88,
+  			rowHeights: 23,
+            contextMenu: {
+                items: {
+                    'row_below': {
+                        name: 'Ajouter une nouvelle ligne'
+                    },
+                    'remove_row': {
+                        name: 'Supprimer la ligne selectionnée'
+                    }
+                }
+            }
+        };
+        var hot = new Handsontable(hotElement, hotSettings);
+        hot.addHook("afterChange", function (change, source) {
+            console.log("HOOK AFTER CHANGE");
+            //console.log("source "+source);
+            if (change && source !== "manuelle") {
+                // var row = change[0][0];
+                //var col = (change[0][1]);
+                var key = change[0][1];
+                var newValue = change[0][3];
+                if (source === 'loadData' || (change.length == 1 && newValue == change[0][2])) {
+                    return; //don't save hot  change
+                }
+                //option val
+                switch (key) {
+                    //fix foreign keys problem
+                    case "idJournal":
+                        var idLibelleObj = journaux.filter(function (e) {
+                            return e.libelle == newValue
+                        })[0];
+                        if (idLibelleObj != undefined) {
+                            change[0][3] = idLibelleObj.id;
+                            saveCell(change);
+                        }
+                        ;
+                        break;// trouver l'id de la valeur selectionnée
+                    case "idExercice":
+                        var idLibelleObj = exercices.filter(function (e) {
+                            return e.libelle == newValue
+                        })[0];
+                        if (idLibelleObj != undefined) {
+                            change[0][3] = idLibelleObj.id;
+                            saveCell(change);
+                        }
+                        ;
+                        break;// trouver l'id de la valeur selectionnée
+                    default:
+                        saveCell(change);
+                }
+
+            }
+
+            console.log("END HOOK AFTER CHANGE");
+
+        });
+        hot.addHook("afterCreateRow", function (index, amount, source) {
+            console.log("HOOK AFTER CREATE ROW");
+            if (source == "ContextMenu.rowBelow") {
+                jQuery.ajax({
+                    type: "POST",
+                    url: new_row_url,
+                    //data: {newValue:newValue,row:row,col:col},
+                    data: {index: hot.getDataAtRowProp(index - 1, 'id')},
+                    dataType: 'json',
+                    'success': function (data) {
+                        if (data.result === "ok")
+                            console.log("Row Saved ! ");
+                        //duplicate manually
+                        hot.setDataAtRowProp(index, 'id', data.id, 'manuelle');
+                        hot.setDataAtRowProp(index, 'tokenEcriture', hot.getDataAtRowProp(index - 1, 'tokenEcriture'), 'manuelle');
+                        hot.setDataAtRowProp(index, 'idExercice', hot.getDataAtRowProp(index - 1, 'idExercice'), 'manuelle');
+                        hot.setDataAtRowProp(index, 'idJournal', hot.getDataAtRowProp(index - 1, 'idJournal'), 'manuelle');
+
+                        //location.reload();
+
+                    },
+                    'error': function () {
+                        //location.reload();
+                    }
+                });
+            }
+
+            console.log("END HOOK AFTER CREATE ROW");
+
+        });
+        hot.addHook("beforeRemoveRow", function (index, amount, physicalRow, source) {
+            console.log("HOOK beforeRemoveRow");
+
+            if (source == "ContextMenu.removeRow") {
+
+                jQuery.ajax({
+                    type: "POST",
+                    url: remove_row_url,
+                    //data: {newValue:newValue,row:row,col:col},
+                    data: {index: hot.getDataAtRowProp(index, 'id')},
+                    dataType: 'json',
+                    'success': function (data) {
+                        if (data.result === "ok")
+                            console.log("remove done ! ");
+
+                    },
+                    'error': function () {
+                        console.log("error removing row");
+                    }
+                });
+            }
+            console.log("END HOOK beforeRemoveRow");
+
+        });
+        hot.addHook("afterSelection", function (row, column, row2, column2, prev, sl) {
+            var img = hot.getDataAtRowProp(row, 'img') ==null ?  'defaut_image.gif' : hot.getDataAtRowProp(row, 'img');
+            var path =  "{{ url('index') }}" + "images/ecriture/" + img;
+            $("img.preview").attr('src',path);
+            $("a.preview").attr('href', path);
+            var $easyzoom =  $('.easyzoom').easyZoom();
+            $easyzoom.data('easyZoom').swap(path,path);
+
+
+
+        });
+
+        function saveCell(changes, success) {
+            console.log(changes);
+            jQuery.ajax({
+                type: "POST",
+                url: save_cell_url,
+                data: {changes: changes, id: hot.getDataAtRowProp(changes[0][0], 'id')},
+                dataType: 'json',
+                'success': function (data) {
+                    if (data.result === "ok") {
+                        console.log("Cell updated !" + changes[0][0]);
+                        //if no id then its new row, get the token and id and attribute them to cells
+                        if (hot.getDataAtRowProp(changes[0][0], 'id') == null) {
+                            hot.setDataAtRowProp(changes[0][0], "id", data.id, "manuelle");
+                            hot.setDataAtRowProp(changes[0][0], "tokenEcriture", data.token, "manuelle");
+                        }
+
+                    } else {
+                       // alert("An error happened updating the table")
+                        // location.reload();
+                    }
+                },
+                'error': function (jqXHR, textStatus, errorThrown) {
+                //    alert("An error happened, Save failed ! Please try again afer page refresh")
+                    // location.reload();
+                }
+            });
+        }
+
+        function inputFileRenderer (instance, td, row, col, prop, value, cellProperties) {
+		  	var escaped = Handsontable.helper.stringify(value),
+		    input;
+		 	//   alert(escaped);
+		    input = document.createElement('input');
+		    input.type = 'file';
+		    input.name= "fileUpload";
+		    input.id="fileUpload"
+
+		    Handsontable.dom.empty(td);
+		    td.appendChild(input);
+		  	return td;
+		}
+
+		$('input[type="file"]').change(function(){
+
+            var change = hot.getSelected();
+            var key = change[0][1];
+            var newValue = change[0][3];
+          	
+                var myFormData = new FormData();
+				myFormData.append('pictureFile', $('input[type="file"]').prop('files')[0]);
+				myFormData.append('id', hot.getDataAtRowProp(change[0][0], 'id'));
+				
+            jQuery.ajax({
+                type: "POST",
+                processData: false, 
+        		contentType: false, 
+                url: save_image_url,
+                data: myFormData ,
+                dataType: 'json',
+                'success': function (data) {
+                	
+                	hot.setDataAtRowProp(change[0][0], 'img', data.val, "manuelle")
+                    
+                },
+                'error': function (jqXHR, textStatus, errorThrown) {
+                
+                }
+            });
+
+        });
+
+    </script>
+{% endblock %}

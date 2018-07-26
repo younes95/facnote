@@ -1,0 +1,29 @@
+.form-control-plaintext {
+
+    display: block !important;
+    width: 100% !important;
+    padding-top: .375rem !important;
+    padding-bottom: .375rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+    background-color: transparent !important;
+    border: solid transparent !important;
+        border-top-width: medium !important;
+        border-right-width: medium !important;
+        border-bottom-width: medium !important;
+        border-left-width: medium !important;
+    border-width: 1px 0 !important;
+
+}
+
+
+select.form-control-plaintext {
+   -webkit-appearance: none !important;
+   -moz-appearance: none !important;
+   appearance: none !important;
+}
+
+
+.fade.show {
+    opacity: 1;
+}

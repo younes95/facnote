@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+
+{% block body %}
+
+<style>
+    .modals {
+      position: relative;
+      top: auto;
+      bottom: auto;
+      right: auto;
+      left: auto;
+      display: block;
+      z-index: 1;
+    }
+
+    
+  </style>
+
+	<button type="button" class="btn btn-default" data-toggle="modal" data-target="#modal-ajouterClient">Ajouter client</button>
+	<table id="utilisateurTable" class="table table-striped table-hover table-bordered" style="width:100%">
+		<thead>
+			<tr>
+				<th scope="col">Nom</th>
+				<th scope="col">Prénom</th>
+				<th scope="col">Ville</th>
+				<th scope="col">Téléphone</th>
+				<th scope="col">Email</th>
+			</tr>
+		</thead>
+		<tbody>
+	    {% for client in clients %}
+			<tr>
+				<td>
+					<div class="input-group-prepend">
+						{% if is_granted('ROLE_EDITION') %}
+							<a  href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+								{{ client.nomClient}}
+							</a>
+							<ul class="dropdown-menu" x-placement="top-start" style="position: absolute; transform: translate3d(0px, -165px, 0px); top: 0px; left: 0px; will-change: transform;">
+									<li class="dropdown-item" style="padding:5px;">
+										<a href="{{ path('editer_client', {tokenClientChercher: client.tokenClient}) }}" style="color:#FFF !important" class="btn btn-block  btn-primary"  role="button">
+											<i class="fa fa-edit" aria-hidden="true"></i> Editer
+										</a>
+									</li>
+									
+									{% if is_granted('ROLE_SUPPRESSION') %}
+										<li class="dropdown-divider"></li>
+										<li class="dropdown-item" style="padding:5px;">
+											<a href="" style="color:#FFF !important" class="btn btn-block btn-danger"  role="button">
+												<i class="fa fa-trash" aria-hidden="true"></i> Supprimer
+											</a>
+										</li>
+									{% endif %}
+							</ul>
+						{% else %}
+							{{ client.nomClient}}
+						{% endif %}
+						
+					</div>
+				</td>
+				<td>{{ client.prenomClient}}</td>
+				<td>{{ client.villeClient}}</td>
+				<td>{{ client.telClient }} {{ client.mobileClient }}</td>
+			</tr>
+		{%endfor%}
+		</tbody>
+
+	</table>
+
+	{% include 'client/ajouter.html.twig' %}
+{% endblock %}
+

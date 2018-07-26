@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<div class="row">
+        <div class="col-sm-12">
+            <div class="box box-solid box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Droits par Module</h3>
+                    <div class="box-tools pull-right">
+                        <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    </div><!-- /.box-tools -->
+                </div><!-- /.box-header -->
+                <div class="box-body">
+                     <div class="dataTables_wrapper form-inline dt-bootstrap">
+                        {{ form_start(form) }}
+                        <table class="table table-bordered table-hover dataTable" id="all_applications" width="100%">
+                            <thead>
+                            <tr>
+                            	<th class="hidden">id</th>
+                                <th class="text-center">Module</th>
+                                <th class="text-center"><a onclick="selection_colonne('lecture')">Lecture</a></th>
+                                <th class="text-center"><a onclick="selection_colonne('modification')">Modification</a></th>
+                                <th class="text-center"><a onclick="selection_colonne('suppression')">Administrateur</a></th>
+                                <th class="text-center"><a onclick="selection_colonne('bloque')">Accès bloqué</a></th>
+                                <th class="text-center">Seulement son compte</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for module in form.modules %}
+                                {{ form_errors(module) }}
+	                              	<tr>
+	                              		<td class="hidden">{{ form_widget(module.id, {'attr': {'class': 'c-select'}}) }}</td>
+	                                    <td class="text-center">{{ form_widget(module.nomModule) }}</td>
+	                                    <td class="text-center">{{ form_widget(module.lectureEcritureSuppression.0, {'attr': {'class': 'c-select'}}) }}</td>
+                                        <td class="text-center">{{ form_widget(module.lectureEcritureSuppression.1, {'attr': {'class': 'c-select'}}) }}</td>
+                                        <td class="text-center">{{ form_widget(module.lectureEcritureSuppression.2, {'attr': {'class': 'c-select'}}) }}</td>
+                                        <td class="text-center">{{ form_widget(module.lectureEcritureSuppression.3, {'attr': {'class': 'c-select'}}) }}</td>
+	                                    <td class="text-center">{{ form_widget(module.SeulTous, {'attr': {'class': 'c-select'}}) }}</td>
+	                                </tr>
+                            {% endfor %}
+                             </tbody>
+                        </table>
+                         <button type="submit" class="btn btn-primary btn-lg btn-block">Enregistrer</button>
+                         {{ form_end(form) }}
+                        <div>
+ 
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     </div><!-- row -->
+    <script language="javascript">
+        function selection_colonne(id_item) {
+         var radios = document.getElementsByTagName('input');
+         var myRegex = /all_/;
+         for (var i = 0; i < radios.length; i++) {
+           if(myRegex.test(radios[i].id) && (radios[i].dataset.type != 'all_'+id_item)) {
+             radios[i].checked = false;
+           }
+           if (radios[i].type == 'radio' && radios[i].dataset.type == id_item) {
+             radios[i].checked = true;
+           }
+         }
+        }
+    </script>
+{% endblock %}

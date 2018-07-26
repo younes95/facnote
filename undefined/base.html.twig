@@ -1,8 +1,0 @@
-{% if app.session.get('tokenSocieteConnecte') != 'vide' %}
-  {% set templateAfficher = 'societe.html.twig' %}
-{% else %}
-  {% set templateAfficher = 'default.html.twig' %}
-{% endif %}
-
-
-{% extends templateAfficher %}
